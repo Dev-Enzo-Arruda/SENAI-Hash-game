@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>O Jogo da Velha Perfeito</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap');
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #0f172a; /* Slate 900 */
+            color: #f8fafc;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            text-align: center;
+            z-index: 10;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #38bdf8, #818cf8, #e879f9);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 4px 20px rgba(129, 140, 248, 0.2);
+            letter-spacing: -1px;
+        }
+
+        .controls {
+            margin-bottom: 30px;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        button.mode-btn {
+            background: #1e293b;
+            color: #94a3b8;
+            border: 2px solid #334155;
+            padding: 10px 24px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        button.mode-btn:hover {
+            background: #334155;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        button.mode-btn.active {
+            background: rgba(56, 189, 248, 0.1);
+            color: #38bdf8;
+            border-color: #38bdf8;
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.3);
+        }
+
+        .status {
+            font-size: 1.5rem;
+            margin-bottom: 25px;
+            height: 35px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            transition: color 0.3s;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 110px);
+            grid-template-rows: repeat(3, 110px);
+            gap: 12px;
+            margin: 0 auto 35px;
+            background: rgba(30, 41, 59, 0.5);
+            padding: 15px;
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5), inset 0 2px 4px rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .cell {
+            background: #0f172a;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4.5rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            box-shadow: inset 0 0 0 transparent;
+        }
+
+        .cell:hover {
+            background: #1e293b;
+            transform: scale(0.97);
+        }
+
+        .cell.x {
+            color: #38bdf8;
+            text-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
+        }
+
+        .cell.o {
+            color: #f43f5e;
+            text-shadow: 0 0 20px rgba(244, 63, 94, 0.4);
+        }
+
+        .cell.winner {
+            background: #064e3b !important;
+            color: #34d399;
+            text-shadow: 0 0 20px rgba(52, 211, 153, 0.6);
+            transform: scale(1.05);
+            z-index: 2;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.2); opacity: 0; }
+            70% { transform: scale(1.2); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .cell span {
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            display: inline-block;
+        }
+
+        #restart {
+            background: linear-gradient(135deg, #f43f5e, #e11d48);
+            color: white;
+            border: none;
+            padding: 14px 40px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(225, 29, 72, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        #restart:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 25px rgba(225, 29, 72, 0.4);
+        }
+
+        #restart:active {
+            transform: translateY(1px);
+        }
+
+        /* Decorative background elements */
+        .blob {
+            position: absolute;
+            filter: blur(80px);
+            z-index: -1;
+            opacity: 0.4;
+            border-radius: 50%;
+        }
+        .blob-1 {
+            width: 400px; height: 400px;
+            background: #38bdf8;
+            top: -100px; left: -100px;
+        }
+        .blob-2 {
+            width: 350px; height: 350px;
+            background: #818cf8;
+            bottom: -50px; right: -50px;
+        }
+        
+        @media (max-width: 480px) {
+            .board {
+                grid-template-columns: repeat(3, 90px);
+                grid-template-rows: repeat(3, 90px);
+            }
+            .cell { font-size: 3.5rem; }
+            h1 { font-size: 2.2rem; }
+            .controls { flex-direction: column; gap: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+
+    <div class="container">
+        <h1>Jogo da Velha</h1>
+        
+        <div class="controls">
+            <button id="btn-pvp" class="mode-btn active">2 Jogadores</button>
+            <button id="btn-pve" class="mode-btn">vs Inteligência Artificial</button>
+        </div>
+
+        <div class="status" id="status">Vez do X</div>
+
+        <div class="board" id="board">
+            <div class="cell" data-index="0"></div>
+            <div class="cell" data-index="1"></div>
+            <div class="cell" data-index="2"></div>
+            <div class="cell" data-index="3"></div>
+            <div class="cell" data-index="4"></div>
+            <div class="cell" data-index="5"></div>
+            <div class="cell" data-index="6"></div>
+            <div class="cell" data-index="7"></div>
+            <div class="cell" data-index="8"></div>
+        </div>
+
+        <button id="restart">Reiniciar Jogo</button>
+    </div>
+
+    <script>
+        const cells = document.querySelectorAll('.cell');
+        const statusText = document.getElementById('status');
+        const restartBtn = document.getElementById('restart');
+        const btnPvp = document.getElementById('btn-pvp');
+        const btnPve = document.getElementById('btn-pve');
+
+        const winConditions = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8], // Linhas
+            [0, 3, 6], [1, 4, 7], [2, 5, 8], // Colunas
+            [0, 4, 8], [2, 4, 6]             // Diagonais
+        ];
+
+        let options = ["", "", "", "", "", "", "", "", ""];
+        let currentPlayer = "X";
+        let running = false;
+        let isPvE = false;
+        
+        // Configurações para a Inteligência Artificial
+        let humanPlayer = "X";
+        let aiPlayer = "O";
+
+        initializeGame();
+
+        function initializeGame() {
+            cells.forEach(cell => cell.addEventListener('click', cellClicked));
+            restartBtn.addEventListener('click', restartGame);
+            
+            btnPvp.addEventListener('click', () => setMode(false));
+            btnPve.addEventListener('click', () => setMode(true));
+            
+            running = true;
+            updateStatusText();
+        }
+
+        function setMode(pve) {
+            isPvE = pve;
+            btnPvp.classList.toggle('active', !pve);
+            btnPve.classList.toggle('active', pve);
+            restartGame();
+        }
+
+        function cellClicked() {
+            const cellIndex = this.getAttribute('data-index');
+
+            // Ignora o clique se a célula estiver ocupada, o jogo tiver acabado, ou for o turno da IA
+            if (options[cellIndex] != "" || !running || (isPvE && currentPlayer === aiPlayer)) {
+                return;
+            }
+
+            updateCell(this, cellIndex, currentPlayer);
+            checkWinner();
+
+            // Turno da IA
+            if (running && isPvE && currentPlayer === aiPlayer) {
+                statusText.textContent = "IA Pensando...";
+                setTimeout(makeAIMove, 400); // Pequeno delay para simular pensamento e melhorar a UX
+            }
+        }
+
+        function updateCell(cell, index, player) {
+            options[index] = player;
+            cell.innerHTML = `<span>${player}</span>`;
+            cell.classList.add(player.toLowerCase());
+        }
+
+        function changePlayer() {
+            currentPlayer = (currentPlayer == "X") ? "O" : "X";
+            updateStatusText();
+        }
+        
+        function updateStatusText() {
+            if (isPvE && currentPlayer === aiPlayer) {
+                statusText.textContent = "Vez da Inteligência Artificial (O)";
+                statusText.style.color = "#f43f5e";
+            } else {
+                statusText.textContent = `Sua Vez (${currentPlayer})`;
+                statusText.style.color = currentPlayer === "X" ? "#38bdf8" : "#f43f5e";
+            }
+        }
+
+        function checkWinner() {
+            let roundWon = false;
+            let winningCondition = null;
+
+            for (let i = 0; i < winConditions.length; i++) {
+                const condition = winConditions[i];
+                const cellA = options[condition[0]];
+                const cellB = options[condition[1]];
+                const cellC = options[condition[2]];
+
+                if (cellA == "" || cellB == "" || cellC == "") {
+                    continue;
+                }
+                if (cellA == cellB && cellB == cellC) {
+                    roundWon = true;
+                    winningCondition = condition;
+                    break;
+                }
+            }
+
+            if (roundWon) {
+                const winnerName = (isPvE && currentPlayer === aiPlayer) ? "A Inteligência Artificial" : `O Jogador ${currentPlayer}`;
+                statusText.textContent = `${winnerName} Venceu!`;
+                statusText.style.color = "#10b981"; // Verde sucesso
+                running = false;
+                highlightWinner(winningCondition);
+            } else if (!options.includes("")) {
+                statusText.textContent = `Deu Velha! (Empate)`;
+                statusText.style.color = "#fbbf24"; // Amarelo
+                running = false;
+            } else {
+                changePlayer();
+            }
+        }
+
+        function highlightWinner(condition) {
+            condition.forEach(index => {
+                cells[index].classList.add('winner');
+            });
+        }
+
+        function restartGame() {
+            currentPlayer = "X";
+            options = ["", "", "", "", "", "", "", "", ""];
+            cells.forEach(cell => {
+                cell.innerHTML = "";
+                cell.className = "cell"; // Remove classes X, O, e winner
+            });
+            running = true;
+            updateStatusText();
+            
+            // Se a IA fosse começar (ex: se alternássemos quem começa), a lógica viria aqui.
+        }
+
+        // ==========================================
+        // ALGORITMO MINIMAX (IA PERFEITA E IMBATÍVEL)
+        // ==========================================
+        function makeAIMove() {
+            if (!running) return;
+            
+            let bestScore = -Infinity;
+            let move;
+            
+            // Otimização: Se for a primeira jogada e o meio estiver livre, pegar o meio.
+            let emptyCells = options.filter(cell => cell === "").length;
+            if (emptyCells === 9) {
+                move = 4; // Centro (embora a IA sempre jogue depois do humano por padrão, isso cobre caso ela comece)
+            } else if (emptyCells === 8 && options[4] === "") {
+                 move = 4; // Pega o centro se o humano não pegou
+            } else {
+                for (let i = 0; i < options.length; i++) {
+                    if (options[i] == "") {
+                        options[i] = aiPlayer;
+                        let score = minimax(options, 0, false);
+                        options[i] = "";
+                        if (score > bestScore) {
+                            bestScore = score;
+                            move = i;
+                        }
+                    }
+                }
+            }
+
+            if (move !== undefined) {
+                const cell = document.querySelector(`.cell[data-index="${move}"]`);
+                updateCell(cell, move, aiPlayer);
+                checkWinner();
+            }
+        }
+
+        function checkWinAI(board) {
+            for (let i = 0; i < winConditions.length; i++) {
+                const [a, b, c] = winConditions[i];
+                if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+                    return board[a];
+                }
+            }
+            if (!board.includes("")) return 'tie';
+            return null;
+        }
+
+        function minimax(board, depth, isMaximizing) {
+            let result = checkWinAI(board);
+            if (result !== null) {
+                if (result === aiPlayer) return 10 - depth;
+                if (result === humanPlayer) return depth - 10;
+                return 0; // Empate
+            }
+
+            if (isMaximizing) {
+                let bestScore = -Infinity;
+                for (let i = 0; i < board.length; i++) {
+                    if (board[i] === "") {
+                        board[i] = aiPlayer;
+                        let score = minimax(board, depth + 1, false);
+                        board[i] = "";
+                        bestScore = Math.max(score, bestScore);
+                    }
+                }
+                return bestScore;
+            } else {
+                let bestScore = Infinity;
+                for (let i = 0; i < board.length; i++) {
+                    if (board[i] === "") {
+                        board[i] = humanPlayer;
+                        let score = minimax(board, depth + 1, true);
+                        board[i] = "";
+                        bestScore = Math.min(score, bestScore);
+                    }
+                }
+                return bestScore;
+            }
+        }
+    </script>
+</body>
+</html>
